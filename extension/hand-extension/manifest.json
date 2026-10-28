@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "AI Agent Hands",
+  "version": "1.0",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": ["tabs", "scripting", "alarms", "storage"],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}

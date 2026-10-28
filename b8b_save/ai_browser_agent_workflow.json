@@ -1,0 +1,807 @@
+{
+  "name": "AI Browser Agent (3 модели)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        400
+      ],
+      "id": "e51dcc6d-d7b6-4ed8-b829-b1487555b90b",
+      "name": "Execute workflow"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        600
+      ],
+      "id": "efc86a87-aa10-4bd1-a7c1-975b239e5431",
+      "name": "Расписание (ежедневно)",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"user_request\": \"Откликайся на вакансии на hh.ru. Критерии: Java-разработчик, удалённая работа или Поиск по всем регионам, зарплата от не указанна. Для каждой вакансии: открой её, нажми «Откликнуться», при необходимости выбери резюме, ответь на вопросы и/или введи сопроводительное письмо, отправь отклик. Так же порверь stack с моим.\",\n  \"mode\": \"\",\n  \"start_url\": \"https://novouralsk.hh.ru/search/vacancy?resume=e231d8a5ff110a65de0039ed1f4c4462674132&from=resumelist&hhtmFrom=applicant_profile\",\n  \"target_count\": 10,\n  \"criteria\": \"\",\n  \"candidate_profile\": \"Имя: Кирилл Говорухин. Должность: Java Developer. Опыт: более 2.5 лет коммерческой разработки (в т.ч. 741 Studios). Стек: Java 17+, Spring Boot 3, PostgreSQL, Apache Kafka, RabbitMQ, Docker, Kubernetes, CI/CD (Jenkins, GitLab CI). Принципы: Clean/Onion Architecture, SOLID, TDD. Образование: Уральский радиотехнический колледж (выпуск 2025), студент УрФУ (ИСиТ, 2 курс). Город: Полевской. Формат работы: удалённая работа. Ожидаемая зарплата: не указанна. Готовность к переезду/командировкам: готов. Английский: B2 (свободное чтение тех. документации, отличный уровень восприятия на слух и разговорной речи). Ссылки: GitHub (проекты urfu-cake-shop, Links-Extension).\",\n  \"writer_rules\": \"Здравствуйте! Меня заинтересовала вакансия «{{должность}}» в компании «{{компания}}». У меня более 2,5 лет опыта бэкенд-разработки, уверенно владею Java 17+, Spring Boot 3, PostgreSQL и Kafka. Имею практический опыт проектирования отказоустойчивых микросервисов, решения проблем конкурентного доступа (race conditions) и развертывания приложений в Kubernetes. Буду рад обсудить детали на интервью. С уважением, Кирилл Говорухин.\",\n  \"history_of_actions\": [],\n  \"signatures\": [],\n  \"step\": 0,\n  \"done_count\": 0,\n  \"skipped_count\": 0,\n  \"visited_ids\": [],\n  \"current_vacancy_id\": \"\",\n  \"engaged\": false,\n  \"list_url\": \"\",\n  \"letter_toggled\": false,\n  \"type_counts\": {},\n  \"last_sent\": \"\",\n  \"chat_waits\": 0,\n  \"stale_count\": 0\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        500
+      ],
+      "id": "74ef00e9-48e7-42a7-a4c4-58a9f6d88f91",
+      "name": "Задание"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=ЗАПРОС: {{ $json.user_request }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Ты разбираешь запрос пользователя для браузерного агента и возвращаешь JSON.\nmode: \"apply\" — отклики на вакансии (hh.ru и подобные); \"chat\" — переписка или ответы в мессенджере/чат-боте; \"browse\" — всё остальное (открыть сайт, найти, кликнуть, перейти между вкладками).\ngoal: одно короткое предложение — что нужно сделать (по-русски).\nstart_url: адрес сайта, ТОЛЬКО если он явно указан в запросе, иначе пустая строка. Не придумывай адреса.\ntarget_count: сколько раз выполнить действие (откликов, ответов), иначе 0.\ncriteria: критерии отбора вакансий кратко, иначе пустая строка."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        500
+      ],
+      "id": "02983dae-6208-436a-a43f-765f8ec9d4d8",
+      "name": "Планировщик",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "qwen2.5-coder-14b-instruct-uncensored-patched",
+          "mode": "id"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        384,
+        760
+      ],
+      "id": "11ae181f-08df-4f62-b288-1026409bde99",
+      "name": "Модель: Планировщик",
+      "credentials": {
+        "openAiApi": {
+          "id": "hFlLP9CuSArth8Ri",
+          "name": "OpenAI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"mode\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"apply\",\n        \"chat\",\n        \"browse\"\n      ]\n    },\n    \"goal\": {\n      \"type\": \"string\",\n      \"description\": \"Короткая цель одним предложением.\"\n    },\n    \"start_url\": {\n      \"type\": \"string\",\n      \"description\": \"Адрес из запроса или пустая строка.\"\n    },\n    \"target_count\": {\n      \"type\": \"integer\",\n      \"description\": \"Сколько раз выполнить, иначе 0.\"\n    },\n    \"criteria\": {\n      \"type\": \"string\",\n      \"description\": \"Критерии отбора вакансий или пустая строка.\"\n    }\n  },\n  \"required\": [\n    \"mode\",\n    \"goal\",\n    \"start_url\",\n    \"target_count\",\n    \"criteria\"\n  ]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        624,
+        760
+      ],
+      "id": "b8dcf8a0-1833-4b91-a4fb-f6bb40b88811",
+      "name": "Парсер плана"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Объединяем: то, что задано в «Задании» > то, что надёжно находится кодом > ответ «Планировщика» > значения по умолчанию\nconst getCtx = (name) => {\n  let lastErr;\n  for (const suffix of ['', '1', '2', '3', '4', '5']) {\n    const n = name + suffix;\n    try { return $(n).item.json; } catch (e) { lastErr = e; }\n    try { return $(n).first().json; } catch (e) { lastErr = e; }\n  }\n  throw lastErr;\n};\n\nconst st = getCtx('Задание');\nconst plan = ($input.item.json && $input.item.json.output && typeof $input.item.json.output === 'object') ? $input.item.json.output : {};\nconst req = String(st.user_request || '');\n\nconst KNOWN_SITES = [\n  [/telegram|телеграм|t\\.me/i, 'https://web.telegram.org/a/'],\n  [/youtube|ютуб|ютьюб/i, 'https://www.youtube.com/'],\n  [/google|гугл/i, 'https://www.google.com/'],\n  [/hh\\.ru|headhunter|хх\\.ру/i, 'https://hh.ru/']\n];\n\n// --- режим ---\nlet mode = String(st.mode || '').trim();\nif (!['apply', 'chat', 'browse'].includes(mode)) {\n  if (/(telegram|телеграм|t\\.me|@\\w*bot\\b|мессенджер|переписк)/i.test(req)) mode = 'chat';\n  else if (/(вакан|отклик|hh\\.ru|headhunter|резюме)/i.test(req)) mode = 'apply';\n  else mode = ['apply', 'chat', 'browse'].includes(plan.mode) ? plan.mode : 'browse';\n}\n\n// --- адрес ---\nconst urlInReq = (req.match(/https?:\\/\\/[^\\s)»\"]+/) || [])[0] || '';\nlet startUrl = String(st.start_url || '').trim() || urlInReq;\nif (!startUrl && /^https?:\\/\\//i.test(String(plan.start_url || ''))) startUrl = plan.start_url;\nif (!startUrl) { const k = KNOWN_SITES.find(([re]) => re.test(req)); if (k) startUrl = k[1]; }\n\n// --- сколько раз ---\nlet count = Number(st.target_count || 0);\nif (!count) { const m = req.match(/(\\d+)\\s*(?:раз|откликов|отклика|отклик|вакансий|вакансии|сообщений|ответов|шт)/i); if (m) count = Number(m[1]); }\nif (!count) count = Number(plan.target_count || 0);\nif (!count) count = { apply: 10, chat: 20, browse: 0 }[mode];\nif (mode === 'browse') count = 0;\n\n// --- история обработанных вакансий из прошлых запусков (только у активного workflow) ---\nlet saved = [];\ntry {\n  const sd = $getWorkflowStaticData('global');\n  saved = Array.isArray(sd.visited_ids) ? sd.visited_ids.map(String) : [];\n} catch (e) { /* нет статических данных — не страшно */ }\nconst own = Array.isArray(st.visited_ids) ? st.visited_ids.map(String) : [];\nconst visited = Array.from(new Set(saved.concat(own))).slice(-2000);\n\nreturn {\n  json: {\n    ...st,\n    mode,\n    goal: String(plan.goal || '').trim() || req,\n    start_url: startUrl,\n    list_url: startUrl,\n    target_count: count,\n    criteria: String(st.criteria || plan.criteria || ''),\n    visited_ids: visited\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        500
+      ],
+      "id": "b2c36a66-03c7-4326-8666-f35e28655bfb",
+      "name": "Разобрать план"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        928,
+        500
+      ],
+      "id": "cd5db97a-75ca-4ffc-9451-cf72a22acb8f",
+      "name": "Начало шага"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:8080/state",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "wait",
+              "value": "true"
+            },
+            {
+              "name": "timeoutMs",
+              "value": "30000"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1152,
+        500
+      ],
+      "id": "a1bf013a-6497-4550-8451-ff303f656c02",
+      "name": "Получить состояние страницы",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ===== Настройки =====\nconst SINGLE_MAX_STEPS = 30;     // лимит шагов в обычном режиме\nconst STEPS_PER_ITEM = 20;       // режим откликов/чата: шагов на один отклик\nconst BASE_STEPS = 15;           // запас шагов\nconst HISTORY_SHOWN = 3;         // сколько последних действий видит «Решатель»\nconst DECIDE_MAX_ELEMENTS = 35;  // сколько элементов видит «Решатель»\nconst DECIDE_MAX_LINKS = 15;     // из них ссылок\nconst PROFILE_CHARS = 3500;      // длина профиля для «Писателя»\nconst WRITE_LETTER_ALWAYS = true;// писать сопроводительное, даже если оно не обязательно (если есть кнопка)\nconst MAX_TYPE_ATTEMPTS = 3;     // сколько раз пробуем вписать в одно поле\nconst CHAT_MAX_WAITS = 12;       // сколько шагов ждать ответа собеседника\n\n// ===== Настройки под сайт (hh.ru, русский + английский интерфейс) =====\nconst ITEM_HREF_RE = /\\/vacancy\\/(\\d+)/;\nconst ITEM_URL_RE = /(?:\\/vacancy\\/|vacancyId=|vacancy_id=)(\\d+)/i;\nconst FORM_URL_RE = /vacancy_response|\\/apply/i;\nconst LIST_URL_RE = /\\/search\\//i;\nconst SUCCESS_RE = /(вы откликнулись|отклик отправлен|резюме доставлено|ваш отклик отправлен|application sent|responded|response sent|you have applied|resume delivered)/i;\nconst BLOCK_RE = /(я не робот|captcha|капч|подтвердите, что вы не робот|введите код из|verify you are human)/i;\nconst LETTER_REQUIRED_RE = /(сопроводительн\\S* письм\\S*[^.]{0,80}обязательн|обязательн\\S*[^.]{0,80}сопроводительн|cover letter is mandatory|please enter cover letter|cover letter is required)/i;\nconst LETTER_FIELD_RE = /(letter|сопроводит|covering)/i;\nconst LETTER_TOGGLE_RE = /(((написать|добавить|приложить|write|add|attach).{0,30}(сопроводит|cover))|letter-toggle)/i;\nconst APPLY_RE = /^(откликнуться|respond|apply|отправить отклик)/i;\nconst APPLY_DQ_RE = /vacancy-response-link/i;\nconst SUBMIT_RE = /^(откликнуться|отправить( отклик)?|respond|send( application)?|submit|apply|продолжить|continue)/i;\nconst NEXT_RE = /^(дальше|далее|следующая|next)/i;\nconst NEXT_DQ_RE = /pager-next/i;\nconst CHAT_INPUT_RE = /(message|сообщен|напишите)/i;\n\nconst getCtx = (name) => {\n  let lastErr;\n  for (const suffix of ['', '1', '2', '3', '4', '5']) {\n    const n = name + suffix;\n    try { return $(n).item.json; } catch (e) { lastErr = e; }\n    try { return $(n).first().json; } catch (e) { lastErr = e; }\n  }\n  throw lastErr;\n};\n\nconst st = getCtx('Начало шага');\nconst res = $input.item.json || {};\nconst snap = res.snapshot || {};\nconst url = res.current_url || '';\nconst els = Array.isArray(snap.elements) ? snap.elements : [];\nconst pageText = String(snap.text || '');\nconst title = String(snap.title || '');\nconst h1 = String(snap.h1 || '');\nconst tail = String(snap.tail || '');\n\nconst mode = st.mode || 'browse';\nconst targetCount = Number(st.target_count || 0);\nconst batch = targetCount > 0 && mode !== 'browse';\nconst doneCount = Number(st.done_count || 0);\nconst skippedCount = Number(st.skipped_count || 0);\nconst visited = Array.isArray(st.visited_ids) ? st.visited_ids.map(String) : [];\nconst history = Array.isArray(st.history_of_actions) ? st.history_of_actions : [];\nconst signatures = Array.isArray(st.signatures) ? st.signatures : [];\nconst typeCounts = st.type_counts && typeof st.type_counts === 'object' ? st.type_counts : {};\nconst step = Number(st.step || 0);\nconst maxSteps = batch ? targetCount * STEPS_PER_ITEM + BASE_STEPS : SINGLE_MAX_STEPS;\nconst engaged = !!st.engaged;\n\nconst cut = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };\nconst hash = (str) => { let h = 5381; for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0; return String(h); };\nconst normText = (s) => String(s || '').toLowerCase().replace(/[^\\p{L}\\p{N}]+/gu, '');\nconst isEmpty = (e) => !String(e.value || '').trim();\nconst pathOf = (href) => { const m = String(href || '').match(/^https?:\\/\\/[^\\/]+(\\/[^?#]*)/); return m ? m[1] : String(href || ''); };\n\n// ===== Что за страница =====\nconst idMatch = url.match(ITEM_URL_RE);\nconst vacId = idMatch ? idMatch[1] : (engaged ? String(st.current_vacancy_id || '') : '');\nconst itemLinks = els.filter((e) => {\n  if (e.kind !== 'link' || !e.href) return false;\n  const m = e.href.match(ITEM_HREF_RE);\n  return m && !visited.includes(m[1]);\n});\nlet pageKind = 'другая страница';\nif (!url) pageKind = 'браузер пуст';\nelse if (idMatch) pageKind = FORM_URL_RE.test(url) ? 'форма отклика' : 'страница вакансии';\nelse if (itemLinks.length >= 1 || LIST_URL_RE.test(url)) pageKind = 'список вакансий';\n\nconst successSeen = SUCCESS_RE.test(pageText);\nconst blocked = BLOCK_RE.test(pageText);\nconst autoDone = mode === 'apply' && batch && !!vacId && engaged && successSeen;\n\n// ===== Что изменилось после последнего действия =====\nconst fingerprint = url + '|' + hash(els.map((e) => `${e.kind}${e.label}${e.value || ''}${e.chk || ''}`).join('|') + pageText.length);\nconst lastAction = st.last_action || '';\nconst lastUrl = st.last_url || '';\nconst NAV_ACTIONS = ['click', 'open_url', 'skip', 'done'];\nconst prevNoChange = Number(st.no_change_count || 0);\nconst changed = fingerprint !== (st.last_fingerprint || '');\nconst noChange = changed ? 0 : (NAV_ACTIONS.includes(lastAction) ? prevNoChange + 1 : prevNoChange);\nlet changeNote = 'это первый шаг';\nif (st.last_fingerprint !== undefined && lastAction) {\n  if (!lastUrl && url) changeNote = `страница открыта: ${cut(url, 80)}`;\n  else if (lastUrl && url !== lastUrl) changeNote = 'адрес изменился';\n  else if (changed) changeNote = 'содержимое страницы изменилось';\n  else if (NAV_ACTIONS.includes(lastAction)) changeNote = 'страница НЕ изменилась — выбери другой элемент или подожди';\n  else changeNote = 'без изменений';\n}\nconst staleCount = res.fresh === false ? Number(st.stale_count || 0) + 1 : 0;\n\nlet waitsInRow = 0;\nfor (let i = signatures.length - 1; i >= 0 && signatures[i].startsWith('wait|'); i--) waitsInRow++;\n\n// ===== Остановка по защите =====\nlet stopReason = '';\nif (mode === 'chat' && batch && doneCount >= targetCount) stopReason = `Готово: отправлено ${doneCount} из ${targetCount} ответов`;\nelse if (step >= maxSteps) stopReason = 'Достигнут лимит шагов';\nelse if (noChange >= 3) stopReason = 'Страница не меняется после действий (клик не срабатывает?)';\nelse if (blocked) stopReason = 'Нужна капча или подтверждение — пройдите вручную в браузере';\nelse if (staleCount >= 3) stopReason = 'Расширение не присылает состояние страницы (остановлено?)';\n\n// ===== Маршрутизация =====\nconst rule = (action, id, why, extra) => ({ route: 'rule', rule_action: Object.assign({ action, id: id || 0, text: '', url: '', why }, extra || {}) });\nconst goDecide = (hint) => ({ route: 'decide', hint: hint || '' });\nconst label = (e) => cut(e.label || e.dq || e.kind, 40);\n\nfunction findApplyButton() {\n  const cands = els.filter((e) => (e.kind === 'link' || e.kind === 'button') && !e.dis);\n  return cands.find((e) => APPLY_DQ_RE.test(e.dq || '')) || cands.find((e) => APPLY_RE.test(e.label || ''));\n}\n\nfunction routeForm() {\n  const hasDlg = els.some((e) => e.dlg);\n  const scope = hasDlg ? els.filter((e) => e.dlg) : els;\n  const textFields = scope.filter((e) => e.kind === 'text' && !e.dis);\n  const letterLike = (e) => LETTER_FIELD_RE.test(`${e.dq || ''} ${e.label || ''}`);\n  const letterField = textFields.find(letterLike);\n\n  // письмо спрятано за кнопкой «добавить сопроводительное»\n  if (!letterField && !st.letter_toggled && (WRITE_LETTER_ALWAYS || LETTER_REQUIRED_RE.test(pageText))) {\n    const tg = scope.find((e) => ['button', 'link', 'checkbox'].includes(e.kind) && !e.dis && LETTER_TOGGLE_RE.test(`${e.dq || ''} ${e.label || ''}`));\n    if (tg) return rule('click', tg.id, 'открываю поле письма');\n  }\n\n  // что нужно заполнить (берём первое по порядку на странице)\n  const todo = [];\n  for (const e of textFields) {\n    if (!isEmpty(e)) continue;\n    if ((typeCounts[e.sel] || 0) >= MAX_TYPE_ATTEMPTS) return rule('skip', 0, 'не удалось заполнить поле');\n    todo.push({ id: e.id, kind: letterLike(e) ? 'letter' : 'answer', e });\n  }\n  const groups = {};\n  for (const e of scope.filter((x) => x.kind === 'radio' && x.grp)) (groups[e.grp] = groups[e.grp] || []).push(e);\n  for (const g of Object.values(groups)) {\n    if (g.some((r) => r.chk)) continue;\n    todo.push({ id: g[0].id, kind: 'choice', e: g[0], options: g.map((r) => ({ id: r.id, label: r.label })), q: g[0].q });\n  }\n  for (const e of scope.filter((x) => x.kind === 'select' && !x.dis && isEmpty(x))) {\n    todo.push({ id: e.id, kind: 'choice', e, select: true, options: (e.opts || []).map((o, i) => ({ id: e.id, label: o })), q: e.q || e.label });\n  }\n  todo.sort((a, b) => a.id - b.id);\n  if (todo.length) {\n    const t = todo[0];\n    return { route: 'write', write: { kind: t.kind, target_id: t.id, options: t.options || [], select: !!t.select, q: t.q || t.e.q || t.e.label || '' } };\n  }\n\n  // всё заполнено — отправляем\n  const subs = scope.filter((e) => (e.kind === 'button' || e.kind === 'link') && !e.dis && SUBMIT_RE.test(e.label || ''));\n  if (subs.length) return rule('click', subs[subs.length - 1].id, 'отправляю отклик');\n  return goDecide('Поля заполнены, но кнопка отправки не найдена');\n}\n\nfunction routeApply() {\n  if (autoDone) return rule('done', 0, 'найдено подтверждение отклика');\n  if (!url) return rule('open_url', 0, 'открываю список', { url: st.list_url || st.start_url });\n  if (vacId) {\n    if (!engaged) {\n      if (successSeen) return rule('skip', 0, 'уже откликались');\n      const btn = findApplyButton();\n      if (btn) return rule('click', btn.id, 'нажимаю «откликнуться»');\n      return goDecide('На странице вакансии не найдена кнопка отклика');\n    }\n    return routeForm();\n  }\n  if (itemLinks.length) return rule('click', itemLinks[0].id, 'открываю вакансию');\n  const next = els.find((e) => (e.kind === 'link' || e.kind === 'button') && !e.dis && (NEXT_DQ_RE.test(e.dq || '') || NEXT_RE.test(e.label || '')));\n  if (next) return rule('click', next.id, 'следующая страница списка');\n  if (pageKind === 'список вакансий') return rule('finish', 0, 'вакансий больше нет', { force: true });\n  const recent = signatures.slice(-2).filter((s) => s.startsWith('open_url|')).length;\n  if (recent < 2) return rule('open_url', 0, 'возвращаюсь к списку', { url: st.list_url || st.start_url });\n  return goDecide('Неизвестная страница');\n}\n\nfunction routeChat() {\n  if (!url) return rule('open_url', 0, 'открываю мессенджер', { url: st.start_url });\n  const input = els.find((e) => e.kind === 'text' && !e.dis && (e.ce || CHAT_INPUT_RE.test(e.label || '')));\n  if (!input) return goDecide('Не найдено поле ввода сообщения — открой нужный чат');\n  const lastSent = normText(st.last_sent).slice(-40);\n  if (lastSent && normText(tail).endsWith(lastSent)) {\n    if (Number(st.chat_waits || 0) >= CHAT_MAX_WAITS) return rule('finish', 0, 'собеседник не отвечает', { force: true });\n    return rule('wait', 0, 'chat: жду ответ собеседника');\n  }\n  return { route: 'write', write: { kind: 'chat', target_id: input.id, options: [], q: '' } };\n}\n\nfunction routeBrowse() {\n  if (!url && st.start_url) return rule('open_url', 0, 'открываю стартовую страницу', { url: st.start_url });\n  return goDecide('');\n}\n\nlet decision;\nif (stopReason) decision = { route: 'stop' };\nelse if (mode === 'apply') decision = routeApply();\nelse if (mode === 'chat') decision = routeChat();\nelse decision = routeBrowse();\n\n// ===== Промпты (минимум данных) =====\nconst KIND_RU = { link: 'ссылка', button: 'кнопка', text: 'поле', search: 'поиск', select: 'список', radio: 'выбор', checkbox: 'флажок', file: 'файл', other: 'элемент' };\nfunction lineOf(e) {\n  let s = `${e.id}. [${KIND_RU[e.kind] || e.kind}] ${cut(e.label || e.dq || '', 50)}`;\n  if (e.kind === 'text' || e.kind === 'search') s += e.value ? ` = \"${cut(e.value, 30)}\"` : ' (пусто)';\n  if (e.kind === 'link' && e.href) s += ` → ${cut(pathOf(e.href), 40)}`;\n  if (e.dis) s += ' (недоступно)';\n  return s;\n}\n\nlet decidePrompt = '';\nlet writerPrompt = '';\nif (decision.route === 'decide') {\n  const prio = els.filter((e) => e.dlg || e.kind !== 'link').slice(0, DECIDE_MAX_ELEMENTS);\n  const links = els.filter((e) => e.kind === 'link' && !e.dlg).slice(0, DECIDE_MAX_LINKS);\n  const shown = prio.concat(links).slice(0, DECIDE_MAX_ELEMENTS).sort((a, b) => a.id - b.id);\n  const modeHint = { apply: 'идёт отклик на вакансии; если не знаешь, что делать — skip', chat: 'идёт переписка в чате', browse: 'обычная задача' }[mode] || '';\n  decidePrompt = [\n    `ЦЕЛЬ: ${cut(st.goal || st.user_request, 220)}`,\n    `РЕЖИМ: ${modeHint}`,\n    `АДРЕС: ${cut(url || '(браузер пуст)', 100)}`,\n    `СТРАНИЦА: ${cut(title, 80)}`,\n    `ПОСЛЕДНИЕ ДЕЙСТВИЯ:\\n${history.length ? history.slice(-HISTORY_SHOWN).join('\\n') : '(пока нет)'}`,\n    `ИЗМЕНЕНИЯ: ${changeNote}`,\n    decision.hint ? `ПОДСКАЗКА: ${decision.hint}` : '',\n    `ЭЛЕМЕНТЫ:\\n${shown.length ? shown.map(lineOf).join('\\n') : '(на странице нет элементов — подожди)'}`,\n    'Выбери одно действие.'\n  ].filter(Boolean).join('\\n');\n}\n\nif (decision.route === 'write') {\n  const w = decision.write;\n  const vac = cut(title + (h1 && !title.includes(h1) ? ' / ' + h1 : ''), 160);\n  let task;\n  if (w.kind === 'letter') task = `ЗАДАЧА: напиши сопроводительное письмо к вакансии.\\nВАКАНСИЯ: ${vac}\\nКРИТЕРИИ ПОИСКА: ${cut(st.criteria, 150) || '-'}`;\n  else if (w.kind === 'answer') task = `ЗАДАЧА: ответь на вопрос работодателя от имени кандидата (1–3 предложения, только суть).\\nВОПРОС: ${cut(w.q, 300)}\\nВАКАНСИЯ: ${vac}`;\n  else if (w.kind === 'choice') task = `ЗАДАЧА: выбери вариант ответа от имени кандидата. Ответь ТОЛЬКО номером варианта.\\nВОПРОС: ${cut(w.q, 300)}\\nВАРИАНТЫ:\\n${w.options.map((o, i) => `${i + 1}. ${cut(o.label, 80)}`).join('\\n')}`;\n  else task = `ЗАДАЧА: ответь на последнее сообщение собеседника (например, чат-бота) от имени кандидата.\\nПЕРЕПИСКА (конец):\\n${cut(tail, 600)}`;\n  writerPrompt = `${task}\\n\\nПРОФИЛЬ КАНДИДАТА:\\n${cut(String(st.candidate_profile || '(не указан)'), PROFILE_CHARS)}${st.writer_rules ? '\\n\\nСТИЛЬ И ПРИМЕР ПИСЬМА:\\n' + cut(st.writer_rules, 1200) : ''}`;\n}\n\nconst compactEls = els.map((e) => ({ id: e.id, kind: e.kind, tag: e.tag, label: e.label, sel: e.sel, dq: e.dq, href: e.href, value: e.value, ce: e.ce }));\n\nreturn {\n  json: {\n    ...st,\n    history_of_actions: history,\n    signatures,\n    visited_ids: visited,\n    type_counts: typeCounts,\n    step,\n    max_steps: maxSteps,\n    batch,\n    done_count: doneCount,\n    skipped_count: skippedCount,\n    route: decision.route,\n    rule_action: decision.rule_action || null,\n    write: decision.write || null,\n    writer_prompt: writerPrompt,\n    decide_prompt: decidePrompt,\n    limit_reached: stopReason !== '',\n    stop_reason: stopReason,\n    current_url: url,\n    page_kind: pageKind,\n    vac_id: vacId,\n    auto_done: autoDone,\n    els: compactEls,\n    fingerprint,\n    no_change_count: noChange,\n    stale_count: staleCount,\n    change_note: changeNote,\n    waits_in_row: waitsInRow,\n    tail,\n    page_title: title\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        500
+      ],
+      "id": "b7028484-cf99-499d-af13-d811b70ed540",
+      "name": "Анализ страницы"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "stop",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "8325a2a3-6588-4cda-9726-241cd3b9cd70"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "stop"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "rule",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "3adbff63-64de-4d90-b0b9-f3fb392caa6b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "rule"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "write",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "785f836f-2411-4f98-a583-b6a2500ec32b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "write"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "decide",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "fed3bdf5-2653-4840-83ba-b0d2575c3ca8"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "decide"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1600,
+        500
+      ],
+      "id": "0ab0de73-85b4-46cb-a1fd-1d99200654b0",
+      "name": "Маршрут"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.writer_prompt }}",
+        "options": {
+          "systemMessage": "Ты пишешь тексты от первого лица за кандидата. Используй только его профиль.\nПРАВИЛА:\n1. Используй ТОЛЬКО факты из «ПРОФИЛЬ КАНДИДАТА». Не выдумывай компании, цифры, навыки, даты.\n2. Пиши по-русски; если вакансия или вопрос на английском — по-английски. Тон вежливый, деловой, без воды.\n3. Сопроводительное письмо: 4–6 предложений, назови вакансию и 2–3 самых подходящих навыка из профиля. Без заголовков и списков.\n4. Ответ на вопрос работодателя: 1–3 предложения, только суть. Если вопрос про число — ответь числом.\n5. Если даны ВАРИАНТЫ — ответь ТОЛЬКО номером варианта.\n6. В чате отвечай коротко и по делу, одним абзацем.\n7. Если для ответа в профиле нет данных (и это не письмо) — ответь ровно: НЕТ_ДАННЫХ\nВерни только готовый текст без пояснений, кавычек и вводных слов."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1856,
+        660
+      ],
+      "id": "4420deb8-bcf4-4dbc-93f9-f026b81c32d0",
+      "name": "Писатель"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "qwen2.5-coder-14b-instruct-uncensored-patched",
+          "mode": "id"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1792,
+        920
+      ],
+      "id": "e1f56ddb-141e-42eb-83b0-550201dac119",
+      "name": "Модель: Писатель",
+      "credentials": {
+        "openAiApi": {
+          "id": "hFlLP9CuSArth8Ri",
+          "name": "OpenAI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.decide_prompt }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Ты выбираешь следующее действие в браузере. Ты видишь цель, адрес, последние действия и пронумерованные элементы страницы.\nДЕЙСТВИЯ: open_url (нужен url), click (нужен id), type (нужны id и text), wait, skip, finish.\nПРАВИЛА:\n1. id — только число из списка элементов. Не выдумывай номера.\n2. type — только для элементов [поле], [поиск], [список]. В text — что ввести (для поиска — запрос из цели).\n3. Не повторяй действие, которое не помогло: смотри строку ИЗМЕНЕНИЯ.\n4. Если страница пустая — wait, но не больше 2 раз подряд.\n5. skip — бросить текущую вакансию, если не знаешь, что делать (только в режиме откликов).\n6. finish — цель достигнута (открылась нужная страница или видео).\nДля click и type укажи id; для open_url — url; в остальных полях ставь id=0, text=\"\", url=\"\"."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1856,
+        360
+      ],
+      "id": "00e72c80-57dc-4db6-a579-1c33eb85c535",
+      "name": "Решатель"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "qwen2.5-coder-14b-instruct-uncensored-patched",
+          "mode": "id"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1792,
+        100
+      ],
+      "id": "0d14bdd6-90c8-4cf8-8f48-1d7747ae0622",
+      "name": "Модель: Решатель",
+      "credentials": {
+        "openAiApi": {
+          "id": "hFlLP9CuSArth8Ri",
+          "name": "OpenAI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"action\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"open_url\",\n        \"click\",\n        \"type\",\n        \"wait\",\n        \"skip\",\n        \"finish\"\n      ]\n    },\n    \"id\": {\n      \"type\": \"integer\",\n      \"description\": \"Номер элемента из списка (click/type), иначе 0.\"\n    },\n    \"text\": {\n      \"type\": \"string\",\n      \"description\": \"Текст для type, иначе пустая строка.\"\n    },\n    \"url\": {\n      \"type\": \"string\",\n      \"description\": \"Адрес для open_url, иначе пустая строка.\"\n    }\n  },\n  \"required\": [\n    \"action\",\n    \"id\",\n    \"text\",\n    \"url\"\n  ]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2032,
+        100
+      ],
+      "id": "c2b24c77-9847-4111-9b8e-f511603fad29",
+      "name": "Парсер решения"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const getCtx = (name) => {\n  let lastErr;\n  for (const suffix of ['', '1', '2', '3', '4', '5']) {\n    const n = name + suffix;\n    try { return $(n).item.json; } catch (e) { lastErr = e; }\n    try { return $(n).first().json; } catch (e) { lastErr = e; }\n  }\n  throw lastErr;\n};\n\nconst ITEM_HREF_RE = /\\/vacancy\\/(\\d+)/;\nconst LETTER_TOGGLE_RE = /(((написать|добавить|приложить|write|add|attach).{0,30}(сопроводит|cover))|letter-toggle)/i;\n\n// Какие поля состояния переходят на следующий шаг\nconst STATE_KEYS = [\n  'user_request', 'mode', 'goal', 'start_url', 'target_count', 'criteria', 'candidate_profile', 'writer_rules',\n  'history_of_actions', 'signatures', 'step', 'done_count', 'skipped_count', 'visited_ids',\n  'current_vacancy_id', 'engaged', 'list_url', 'letter_toggled', 'type_counts', 'last_sent', 'chat_waits',\n  'stale_count', 'last_action', 'last_fingerprint', 'last_url', 'no_change_count'\n];\n\nconst ctx = getCtx('Анализ страницы');\nconst inp = $input.item.json || {};\nconst out = inp.output;\nconst mode = ctx.mode;\nconst batch = !!ctx.batch;\nconst elMap = {};\nfor (const e of ctx.els || []) elMap[e.id] = e;\n\nconst cut = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };\n\n// ===== 1. Откуда пришло решение =====\nfunction sanitize(t, kind) {\n  t = String(t || '').trim()\n    .replace(/^[\"«“'`]+|[\"»”'`]+$/g, '')\n    .replace(/^(ответ|письмо|сообщение|answer|reply)\\s*[:\\-]\\s*/i, '')\n    .replace(/\\n{3,}/g, '\\n\\n').trim();\n  return cut(t, { letter: 1200, answer: 400, chat: 500 }[kind] || 400);\n}\n\nfunction fromWriter(o) {\n  const w = ctx.write || {};\n  let t = typeof o === 'string' ? o : (o && (o.text || o.output)) || '';\n  t = String(t).trim();\n  if (w.kind === 'choice') {\n    const m = t.match(/\\d+/);\n    const opt = m ? (w.options || [])[Number(m[0]) - 1] : null;\n    if (!opt) return { action: 'wait', why: 'писатель не выбрал вариант', bad: 'писатель не выбрал вариант' };\n    return w.select ? { action: 'type', id: w.target_id, text: opt.label, why: 'выбираю вариант' } : { action: 'click', id: opt.id, why: 'выбираю вариант' };\n  }\n  if (/НЕТ[_ ]ДАННЫХ|NO[_ ]DATA/i.test(t)) return { action: 'skip', why: 'в профиле нет данных для ответа', trusted: true };\n  t = sanitize(t, w.kind);\n  if (!t) return { action: 'wait', why: 'писатель вернул пустой текст', bad: 'писатель вернул пустой текст' };\n  return { action: 'type', id: w.target_id, text: t, enter: w.kind === 'chat', why: w.kind === 'letter' ? 'пишу сопроводительное' : (w.kind === 'chat' ? 'отвечаю в чате' : 'отвечаю на вопрос') };\n}\n\nfunction fromDecider(o) {\n  if (!o || typeof o !== 'object') return { action: 'wait', why: 'нет решения', bad: 'модель не вернула решение' };\n  return { action: String(o.action || '').toLowerCase(), id: Number(o.id) || 0, text: String(o.text || ''), url: String(o.url || ''), why: 'решение модели' };\n}\n\nlet act;\nif (ctx.route === 'rule') act = Object.assign({ text: '', url: '' }, ctx.rule_action, { trusted: true });\nelse if (ctx.route === 'write') act = fromWriter(out);\nelse act = fromDecider(out);\n\nlet action = act.action;\nlet id = act.id || 0;\nlet text = act.text || '';\nlet url = act.url || '';\nlet note = act.bad || '';\nlet rejected = !!act.bad;\nconst reject = (msg) => { note = msg; rejected = true; action = 'wait'; id = 0; text = ''; url = ''; };\n\n// ===== 2. Проверка решения =====\nconst VALID = ['open_url', 'click', 'type', 'wait', 'skip', 'done', 'finish'];\nif (!rejected && !VALID.includes(action)) reject(`неизвестное действие \"${action}\"`);\n\nlet el = null;\nif (!rejected && (action === 'click' || action === 'type')) {\n  el = elMap[id];\n  if (!el) reject(`элемента с номером ${id} нет в списке`);\n  else if (action === 'click' && (el.kind === 'text' || el.kind === 'search') && !act.trusted) reject('это поле ввода — выбери type');\n  else if (action === 'type' && !['text', 'search', 'select'].includes(el.kind)) reject('в этот элемент нельзя вводить текст');\n  else if (action === 'type' && !text) reject('не указан текст для ввода');\n}\n\nif (!rejected && action === 'open_url') {\n  if (url && !/^https?:\\/\\//i.test(url)) url = 'https://' + url.replace(/^\\/+/, '');\n  const norm = (u) => (u || '').replace(/#.*$/, '').replace(/\\/+$/, '').toLowerCase();\n  if (!/^https?:\\/\\/[^\\s\\/]+\\.[^\\s]+/i.test(url)) reject(`open_url без корректного URL (\"${url}\")`);\n  else if (ctx.els.length > 0 && norm(url) === norm(ctx.current_url)) reject('этот адрес уже открыт');\n}\n\nif (!rejected && (action === 'done' || action === 'skip')) {\n  if (mode !== 'apply' || !batch) reject('done/skip работают только в режиме откликов');\n  else if (!ctx.vac_id && !act.trusted) reject('сейчас не открыта вакансия');\n}\n\nif (!rejected && action === 'finish' && batch && !act.force) {\n  reject(`осталось ${Number(ctx.target_count) - Number(ctx.done_count)} из ${ctx.target_count}; finish только когда вакансий больше нет`);\n}\n\n// ===== 3. Защита от зацикливания =====\nconst sigTarget = el ? el.sel : url;\nconst sig = rejected ? `rejected|${note}` : [action, sigTarget, cut(text, 40)].join('|');\nconst sigs = (ctx.signatures || []).concat(sig).slice(-8);\nconst lastN = (n) => sigs.slice(-n);\nconst repeated = action !== 'wait' && lastN(4).length === 4 && lastN(4).every((s) => s === sig);\nconst rejectedRepeat = rejected && lastN(3).length === 3 && lastN(3).every((s) => s === sig);\nlet waitsInRow = 0;\nfor (let i = sigs.length - 1; i >= 0 && sigs[i].startsWith('wait|'); i--) waitsInRow++;\nconst chatWait = mode === 'chat' && action === 'wait' && !rejected;\nconst stuck = repeated || rejectedRepeat || (!chatWait && waitsInRow >= 4);\n\n// ===== 4. Обновление состояния =====\nconst state = {};\nfor (const k of STATE_KEYS) if (ctx[k] !== undefined) state[k] = ctx[k];\n\nlet done = Number(ctx.done_count || 0);\nlet skipped = Number(ctx.skipped_count || 0);\nlet visited = (ctx.visited_ids || []).map(String);\nlet engaged = !!ctx.engaged;\nlet listUrl = ctx.list_url || ctx.start_url || '';\nlet currentVac = ctx.vac_id || '';\nlet letterToggled = !!ctx.letter_toggled;\nconst typeCounts = Object.assign({}, ctx.type_counts || {});\nlet lastSent = ctx.last_sent || '';\nlet chatWaits = Number(ctx.chat_waits || 0);\n\nif (action === 'click' && el) {\n  if (!ctx.vac_id && el.kind === 'link' && el.href && ITEM_HREF_RE.test(el.href)) listUrl = ctx.current_url; // запоминаем список\n  if (LETTER_TOGGLE_RE.test(`${el.dq || ''} ${el.label || ''}`)) letterToggled = true;\n}\nif (action === 'type' && el) {\n  typeCounts[el.sel] = (typeCounts[el.sel] || 0) + 1;\n  if (mode === 'chat') { lastSent = text; done++; chatWaits = 0; }\n}\nif ((action === 'click' || action === 'type') && ctx.vac_id) engaged = true;\nif (chatWait) chatWaits++;\n\nconst closesItem = action === 'done' || action === 'skip';\nif (closesItem) {\n  const vid = String(ctx.vac_id || '');\n  if (vid && !visited.includes(vid)) visited.push(vid);\n  visited = visited.slice(-2000);\n  if (action === 'done') done++; else skipped++;\n  engaged = false; currentVac = ''; letterToggled = false;\n  for (const k of Object.keys(typeCounts)) delete typeCounts[k];\n  try {\n    const sd = $getWorkflowStaticData('global'); // сохраняется между запусками активного workflow\n    sd.visited_ids = visited;\n  } catch (e) { /* в ручном тесте не сохраняется — это нормально */ }\n}\n\n// в чате цель проверяет «Анализ страницы» уже ПОСЛЕ отправки последнего сообщения\nconst reachedTarget = batch && mode === 'apply' && done >= Number(ctx.target_count || 0);\nconst finished = action === 'finish' || stuck || reachedTarget;\n\n// ===== 5. Запись в историю =====\nconst stepNo = Number(ctx.step || 0) + 1;\nconst labelOf = el ? `«${cut(el.label || el.dq, 30)}»` : (url ? cut(url, 50) : '');\nconst VERB = { open_url: 'открыл', click: 'нажал', type: 'ввёл в', wait: 'подождал', skip: 'пропустил вакансию', done: 'отклик отправлен', finish: 'завершил' };\nlet line = `Шаг ${stepNo}: ${VERB[action]} ${labelOf}`.trim();\nif (note) line += ` ⚠ ${note}`;\n\n// ===== 6. Команда расширению (формат Java DTO ActionResponce) =====\nconst command = { url_to_open: '', click_selector: '', inputs_to_fill: [] };\nif (!finished) {\n  if (action === 'open_url') command.url_to_open = url;\n  if (action === 'click') command.click_selector = el.sel;\n  if (action === 'type') {\n    const enter = el.kind === 'search' || act.enter === true;\n    command.inputs_to_fill.push({ selector: el.sel, value: text + (enter ? '\\n' : '') });\n  }\n  if (closesItem) command.url_to_open = listUrl; // вернуться к списку\n}\n\nconst WAIT = { open_url: 1, click: 1.5, type: 1, wait: chatWait ? 8 : 4, skip: 1, done: 1, finish: 0 };\n\nlet finalMessage = '';\nif (stuck) finalMessage = 'Остановлено: агент зациклился или страница не отвечает';\nelse if (reachedTarget) finalMessage = `Готово: выполнено ${done} из ${ctx.target_count}, пропущено ${skipped}`;\nelse if (action === 'finish') finalMessage = act.why || 'Задача выполнена';\n\nreturn {\n  json: {\n    ...state,\n    history_of_actions: (ctx.history_of_actions || []).concat(line).slice(-12),\n    signatures: sigs,\n    step: stepNo,\n    last_action: action,\n    last_fingerprint: ctx.fingerprint,\n    last_url: ctx.current_url,\n    no_change_count: ctx.no_change_count || 0,\n    stale_count: ctx.stale_count || 0,\n    done_count: done,\n    skipped_count: skipped,\n    visited_ids: visited,\n    engaged,\n    current_vacancy_id: currentVac,\n    letter_toggled: letterToggled,\n    type_counts: typeCounts,\n    list_url: listUrl,\n    last_sent: lastSent,\n    chat_waits: chatWaits,\n    command,\n    wait_seconds: rejected ? 1 : WAIT[action],\n    finished,\n    final_message: finalMessage\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        500
+      ],
+      "id": "675593a5-cd11-47cd-a734-d1bfee5ee75c",
+      "name": "Применить решение"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8e3ffb7a-242c-4d54-9e74-d4fa54543ce3",
+              "leftValue": "={{ $json.finished }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2464,
+        500
+      ],
+      "id": "59da59d4-1784-4909-918d-f9e56ef3d3b5",
+      "name": "Задача завершена?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8080/change",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.command }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2688,
+        600
+      ],
+      "id": "9df01d63-c24b-4e2d-8dc4-fc129fcb9544",
+      "name": "Отправить команду в расширение",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// После HTTP-запроса в item осталась только ответ сервера — достаём сохранённое состояние\nconst getCtx = (name) => {\n  let lastErr;\n  for (const suffix of ['', '1', '2', '3', '4', '5']) {\n    const n = name + suffix;\n    try { return $(n).item.json; } catch (e) { lastErr = e; }\n    try { return $(n).first().json; } catch (e) { lastErr = e; }\n  }\n  throw lastErr;\n};\n\nconst s = getCtx('Применить решение');\n// всё состояние идёт дальше, кроме одноразовых полей\nconst { command, finished, final_message, ...state } = s;\n\nreturn { json: state };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2912,
+        600
+      ],
+      "id": "9cb3ea29-9455-4378-ba1c-f868375bd673",
+      "name": "Восстановить состояние"
+    },
+    {
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": "={{ $json.wait_seconds }}",
+        "unit": "seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3136,
+        600
+      ],
+      "id": "e5c86d24-b479-4962-8d48-551cc67f9b4b",
+      "name": "Пауза",
+      "webhookId": "b557895b-62f0-4332-973e-521743f67c0c"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Итог работы агента (сюда попадают и нормальное завершение, и остановка по защите)\nconst j = $input.item.json;\n\nreturn {\n  json: {\n    result: j.final_message || j.stop_reason || 'Остановлено',\n    mode: j.mode || '',\n    done_count: j.done_count || 0,\n    skipped_count: j.skipped_count || 0,\n    target_count: j.target_count || 0,\n    steps: j.step || 0,\n    history_of_actions: j.history_of_actions || []\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        300
+      ],
+      "id": "7a81f310-a71d-4ebc-aa36-37a2b8174311",
+      "name": "Итог"
+    },
+    {
+      "parameters": {
+        "content": "## Три модели, у каждой своя узкая роль\n- **Планировщик** (1 раз за запуск): из свободного запроса определяет режим `apply` / `chat` / `browse`, цель и число повторов. Адрес, число и режим сначала ищет код — модель лишь добирает остальное.\n- **Писатель**: только тексты (письмо, ответ на вопрос, ответ в чате) на основе `candidate_profile`. Остальных данных не видит.\n- **Решатель**: вызывается, только когда код не знает, что делать. Видит ≈ 300–1500 символов: цель, 3 последних действия и пронумерованные элементы (выбирает номер, а не селектор).\n\nВсё предсказуемое (открыть вакансию, нажать «Откликнуться», найти следующую страницу, подтвердить успех, вернуться к списку, не повторять вакансии) делает код в ноде **Анализ страницы**.\n\n**Задание**: `user_request` — свободный текст; `mode`, `start_url`, `target_count` можно оставить пустыми — определятся сами. `target_count` = сколько откликов/ответов за запуск.\n\n**Расписание** выключено — включите ноду и активируйте workflow. История обработанных вакансий сохраняется между запусками только у активного workflow.",
+        "height": 440,
+        "width": 820
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        224,
+        80
+      ],
+      "id": "0e7d54c4-e5fc-4b61-9494-3f24aae44f07",
+      "name": "Заметка"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute workflow": {
+      "main": [
+        [
+          {
+            "node": "Задание",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Расписание (ежедневно)": {
+      "main": [
+        [
+          {
+            "node": "Задание",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Задание": {
+      "main": [
+        [
+          {
+            "node": "Планировщик",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Планировщик": {
+      "main": [
+        [
+          {
+            "node": "Разобрать план",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Разобрать план": {
+      "main": [
+        [
+          {
+            "node": "Начало шага",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Начало шага": {
+      "main": [
+        [
+          {
+            "node": "Получить состояние страницы",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Получить состояние страницы": {
+      "main": [
+        [
+          {
+            "node": "Анализ страницы",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Анализ страницы": {
+      "main": [
+        [
+          {
+            "node": "Маршрут",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Маршрут": {
+      "main": [
+        [
+          {
+            "node": "Итог",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Применить решение",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Писатель",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Решатель",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Писатель": {
+      "main": [
+        [
+          {
+            "node": "Применить решение",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Решатель": {
+      "main": [
+        [
+          {
+            "node": "Применить решение",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Применить решение": {
+      "main": [
+        [
+          {
+            "node": "Задача завершена?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Задача завершена?": {
+      "main": [
+        [
+          {
+            "node": "Итог",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Отправить команду в расширение",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Отправить команду в расширение": {
+      "main": [
+        [
+          {
+            "node": "Восстановить состояние",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Восстановить состояние": {
+      "main": [
+        [
+          {
+            "node": "Пауза",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Пауза": {
+      "main": [
+        [
+          {
+            "node": "Начало шага",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Модель: Планировщик": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Планировщик",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Парсер плана",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Парсер плана": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Планировщик",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Модель: Писатель": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Писатель",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Модель: Решатель": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Решатель",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Парсер решения",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Парсер решения": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Решатель",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false
+  },
+  "versionId": "ee7a1e21-3938-45db-82e2-b1a624b6d8a5",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}
